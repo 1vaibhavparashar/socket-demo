@@ -1,4 +1,4 @@
-const socket = io();
+const socket = io('https://socket-demo-2aob.onrender.com');
 
 // Hide the chat box initially
 $('#chat-box').hide();
