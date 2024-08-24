@@ -1,35 +1,42 @@
-require('dotenv').config() // npm i dotenv
-const { log } = require('console')
-const express = require('express')
-const app = express()
-const http = require('http')
-const server = http.createServer(app) //app is request listener
-const path = require('path')
-const socketio = require('socket.io')
-const io = socketio(server)
+require('dotenv').config(); // npm i dotenv
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const socketio = require('socket.io');
 
-let users = {
+const app = express();
+const server = http.createServer(app); // app is request listener
+const io = socketio(server);
 
-}
+let users = {}; // Store user data
 
+// Handle socket connection
+io.on('connection', (socket) => {
+    console.log("Connection established");
 
-io.on('connection', (socket)=>{
-    console.log("connection established msg sent");
-    socket.on('send-msg', (data)=>{
-        // console.log(data);
-        io.emit('receive-msg',{msg:data.msg, username:users[socket.id]})
-        
-    })
-    socket.on('login', (data)=>{
+    // Handle user login
+    socket.on('login', (data) => {
         users[socket.id] = data.username;
-    })
-})
+        console.log(`${data.username} logged in`);
+    });
 
+    // Handle message sending
+    socket.on('send-msg', (data) => {
+        io.emit('receive-msg', { msg: data.msg, username: users[socket.id] });
+    });
 
-app.use('/',express.static(path.join(__dirname,'public')))
+    // Handle user disconnect
+    socket.on('disconnect', () => {
+        console.log(`${users[socket.id]} disconnected`);
+        delete users[socket.id];
+    });
+});
 
+// Serve static files from the "public" directory
+app.use('/', express.static(path.join(__dirname, 'public')));
 
-let PORT = 3000;
+// Start the server
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`)
-})
+    console.log(`Server is running on port ${PORT}`);
+});
